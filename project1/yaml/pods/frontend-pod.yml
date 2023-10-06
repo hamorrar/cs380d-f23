@@ -8,8 +8,8 @@ spec:
   restartPolicy: Never
   containers:
   - name: frontend-container
-    image: sekwonlee/kvs:frontend
-    imagePullPolicy: Always
+    image: hamorrar/kvs:frontend
+    imagePullPolicy: Never
     securityContext:
       privileged: true
     env:

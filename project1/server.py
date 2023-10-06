@@ -5,21 +5,34 @@ import xmlrpc.server
 serverId = 0
 basePort = 9000
 
+kvs = dict()
+
 class KVSRPCServer:
     # TODO: You need to implement details for these functions.
 
     ## put: Insert a new-key-value pair or updates an existing
     ## one with new one if the same key already exists.
     def put(self, key, value):
-        return "[Server " + str(serverId) + "] Receive a put request: " + "Key = " + str(key) + ", Val = " + str(value)
+        kvs[key] = value
+        return "SUCCESS: SERVER PUT"
+        # return "[Server " + str(serverId) + "] Receive a put request: " + "Key = " + str(key) + ", Val = " + str(value)
 
     ## get: Get the value associated with the given key.
     def get(self, key):
+        ret = kvs.get(key, "ERR_KEY")
+
+        if ret == "ERR_KEY":
+            return "ERR_KEY"
+        return str(key) + ":" + str(ret)
         return "[Server " + str(serverId) + "] Receive a get request: " + "Key = " + str(key)
 
     ## printKVPairs: Print all the key-value pairs at this server.
     def printKVPairs(self):
-        return "[Server " + str(serverId) + "] Receive a request printing all KV pairs stored in this server"
+        ret = ""
+        for key in kvs:
+            ret += str(key) + ":" + str(kvs[key]) + "\n"
+        return ret
+        #return "[Server " + str(serverId) + "] Receive a request printing all KV pairs stored in this server"
 
     ## shutdownServer: Terminate the server itself normally.
     def shutdownServer(self):

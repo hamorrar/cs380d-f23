@@ -1,6 +1,6 @@
-FROM sekwonlee/kvs:base
+FROM hamorrar/kvs:base
 
-MAINTAINER Sekwon Lee <sklee@cs.utexas.edu> version: 0.1
+MAINTAINER Hilal Morrar <hilal@utexas.edu> version: 0.1
 
 USER root
 

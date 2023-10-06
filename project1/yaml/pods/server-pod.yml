@@ -8,8 +8,8 @@ spec:
   restartPolicy: Never
   containers:
   - name: server-container
-    image: sekwonlee/kvs:server
-    imagePullPolicy: Always
+    image: hamorrar/kvs:server
+    imagePullPolicy: Never
     securityContext:
       privileged: true
     env:
