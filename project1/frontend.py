@@ -2,6 +2,7 @@ import xmlrpc.client
 import xmlrpc.server
 from socketserver import ThreadingMixIn
 from xmlrpc.server import SimpleXMLRPCServer
+import random
 
 kvsServers = dict()
 baseAddr = "http://localhost:"
@@ -36,8 +37,23 @@ class FrontendRPCServer:
     ## addServer: This function registers a new server with the
     ## serverId to the cluster membership.
     def addServer(self, serverId):
-        kvsServers[serverId] = xmlrpc.client.ServerProxy(baseAddr + str(baseServerPort + serverId))
-        return "Success"
+        if len(kvsServers) > 0:
+            firstID = random.choice(list(kvsServers.keys()))
+            # print(firstID)
+            kvsServers[serverId] = xmlrpc.client.ServerProxy(baseAddr + str(baseServerPort + serverId))
+
+            kvsFromMember = kvsServers[firstID].printKVPairs()
+            
+            for kvp in kvsFromMember.splitlines():
+                sp = kvp.split(":")
+                key = sp[0]
+                val = sp[1]
+
+                kvsServers[serverId].put(key, val)
+            
+        else:
+            kvsServers[serverId] = xmlrpc.client.ServerProxy(baseAddr + str(baseServerPort + serverId))
+        return "SUCCESS: FE ADD SERVER"
 
     ## listServer: This function prints out a list of servers that
     ## are currently active/alive inside the cluster.
