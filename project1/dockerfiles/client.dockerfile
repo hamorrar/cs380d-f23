@@ -5,6 +5,7 @@ FROM hamorrar/kvs:base
 USER root
 
 WORKDIR $KVS_HOME
+ENV PYTHONUNBUFFERED=1
 
 COPY client.py $KVS_HOME/
 

@@ -5,6 +5,7 @@ from xmlrpc.server import SimpleXMLRPCServer
 import random
 from threading import Thread
 import socket
+from time import sleep
 
 kvsServers = dict()
 baseAddr = "http://localhost:"
@@ -20,8 +21,13 @@ class FrontendRPCServer:
     ## servers that are responsible for inserting a new key-value
     ## pair or updating an existing one.
     def put(self, key, value):
+        problem = None
         for id in kvsServers:
-            ret = kvsServers[id].put(key, value)
+            try:
+                problem = id
+                ret = kvsServers[id].put(key, value)
+            except:
+                kvsServers.pop(problem)
         return "SUCCESS: FE PUT"
 
     ## get: This function routes requests from clients to proper
@@ -73,22 +79,21 @@ class FrontendRPCServer:
         kvsServers.pop(serverId)
         return result
     
-def heartbeat():
-    # for every server in membership
-    for ID in kvsServers:
-        # try to ping twice
-        tries = 0
-        for i in range(2):
+    def heartbeat(sec):
+        print("FE HEARTBEAT THREAD")
+        for id in kvsServers:
+            problem = None
             try:
-                kvsServers[ID].heart()
+                problem = id
+                print("PROBLEM: ", problem)
+                ret = kvsServers[id].heart()
             except:
-                tries += 1
-                # after 2 tries, call it dead. remove from membership
-                if tries == 2:
-                    kvsServers.pop(ID)
+                print("PROBLEM POPPED")
+                kvsServers.pop(problem)
+        # sleep(sec)
 
-
-hb_thread = Thread(target=heartbeat, args=(3.5,), daemon=True, name="hb")
+hb_thread = Thread(target=FrontendRPCServer.heartbeat, args=(1,), daemon=True, name="hb")
+hb_thread.start()
 server = SimpleThreadedXMLRPCServer(("localhost", 8001))
 socket.setdefaulttimeout(3)
 server.register_instance(FrontendRPCServer())

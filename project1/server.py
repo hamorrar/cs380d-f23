@@ -38,7 +38,7 @@ class KVSRPCServer:
     def shutdownServer(self):
         return "SUCCESS: [Server " + str(serverId) + "] Receive a request for a normal shutdown"
     
-    def heart():
+    def heart(self):
         return "GM"
 
 if __name__ == '__main__':
