@@ -2,16 +2,20 @@ import xmlrpc.client
 import xmlrpc.server
 from socketserver import ThreadingMixIn
 from xmlrpc.server import SimpleXMLRPCServer
-import random
-from readerwriterlock import rwlock
+# from readerwriterlock import rwlock
 import socket
+from threading import Lock
 from time import sleep
 
 kvsServers = dict()
 baseAddr = "http://localhost:"
 baseServerPort = 9000
 
-rw = rwlock.RWLockFair()
+# rw = rwlock.RWLockFair()
+# oneLock = rw.gen_wlock()
+
+
+lock = Lock()
 
 class SimpleThreadedXMLRPCServer(ThreadingMixIn, SimpleXMLRPCServer):
         pass
@@ -23,84 +27,118 @@ class FrontendRPCServer:
     ## servers that are responsible for inserting a new key-value
     ## pair or updating an existing one.
     def put(self, key, value):
-        with rw.gen_wlock():
-            problem = None
+        print("--- FE PUT KEY START: ", key, " VALUE: ", value, "---")
+        print("FE PUT KEY TOP SERVERS: ", kvsServers)
+        with lock:
+            deleteserver = []
             for id in kvsServers:
+                print("FE PUT KEY SERVERS: ", kvsServers)
                 try:
-                    problem = id
-                    ret = kvsServers[id].put(key, value)
+                    kvsServers[id].put(key, value)
                 except:
-                    kvsServers.pop(problem)
+                    # kvsServers.pop(id)
+                    deleteserver.append(id)
+            for s in deleteserver:
+                kvsServers.pop(s)
+        print("--- FE PUT KEY END: ", key, " VALUE: ", value, "---")
+
         return "SUCCESS: FE PUT"
 
     ## get: This function routes requests from clients to proper
     ## servers that are responsible for getting the value
     ## associated with the given key.
     def get(self, key):
-        with rw.gen_wlock():
-            problem = None                
-            # serverId = key % len(kvsServers)
+        print("--- FE GET KEY START: ", key, "---")
+        with lock:
+            deleteserver = []
             for id in kvsServers:
                 try:
-                    problem = id
                     ret = kvsServers[id].get(key)
                     break
                 except:
-                    kvsServers.pop(problem)
+                    # kvsServers.pop(id)
+                    deleteserver.append(id)
+            for s in deleteserver:
+                kvsServers.pop(s)
+        print("--- FE GET KEY END: ", key, " VALUE: ", ret, "---")
         return ret
 
     ## printKVPairs: This function routes requests to servers
     ## matched with the given serverIds.
     def printKVPairs(self, serverId):
-        with rw.gen_wlock():
-            ret = kvsServers[serverId].printKVPairs()
+        print("--- FE PRINTKVPAIRS START ---")
+        with lock:
+            try:
+                ret = kvsServers[serverId].printKVPairs()
+            except:
+                return "ERR_NOEXIST"
+        print("--- FE PRINTKVPAIRS END ---")
+
         return ret
 
     ## addServer: This function registers a new server with the
     ## serverId to the cluster membership.
     def addServer(self, serverId):
-        with rw.gen_wlock():
-            for i in range(2):
-                if len(kvsServers) > 0:
-                    firstID = random.choice(list(kvsServers.keys()))
+        print("--- FE ADDSERVER START ---")
+        with lock:
+            if len(kvsServers) > 0:
+                for id in kvsServers:
                     kvsServers[serverId] = xmlrpc.client.ServerProxy(baseAddr + str(baseServerPort + serverId))
-
-                    kvsFromMember = kvsServers[firstID].printKVPairs()
+                    try:
+                        kvsFromMember = kvsServers[id].printKVPairs()
                     
-                    for kvp in kvsFromMember.splitlines():
-                        sp = kvp.split(":")
-                        key = sp[0]
-                        val = sp[1]
+                        for kvp in kvsFromMember.splitlines():
+                            sp = kvp.split(":")
+                            key = sp[0]
+                            val = sp[1]
 
-                        kvsServers[serverId].put(key, val)
-                else:
-                    kvsServers[serverId] = xmlrpc.client.ServerProxy(baseAddr + str(baseServerPort + serverId))
+                            # new one could crash/fail while being added
+                            try:
+                                kvsServers[serverId].put(key, val)
+                            except:
+                                kvsServers.pop(serverId)
+                    except:
+                        continue
+
+                    break
+            else:
+                kvsServers[serverId] = xmlrpc.client.ServerProxy(baseAddr + str(baseServerPort + serverId))
+        print("--- FE ADDSERVER END ---")
+
         return "SUCCESS: FE ADD SERVER"
 
     ## listServer: This function prints out a list of servers that
     ## are currently active/alive inside the cluster.
     def listServer(self):
-        with rw.gen_wlock():
+        print("--- FE LISTSERVER START ---")
+        with lock:
             ret = ""
             serverList = []
+            deleteservers = []
             for serverId, rpcHandle in kvsServers.items():
                 try:
                     rpcHandle.heart()
+                    serverList.append(serverId)
                 except:
-                    continue
-                serverList.append(serverId)
+                    deleteservers.append(serverId)
+            for s in deleteservers:
+                kvsServers.pop(s)
             for s in serverList:
                 ret += str(s) + ","
+        print("--- FE LISTSERVER END ---")
+
         return ret[:-1]
 
     ## shutdownServer: This function routes the shutdown request to
     ## a server matched with the specified serverId to let the corresponding
     ## server terminate normally.
     def shutdownServer(self, serverId):
-        with rw.gen_wlock():
-            result = kvsServers[serverId].shutdownServer()
+        print("--- FE SHUTDOWN START ---")
+        with lock:
+            kvsServers[serverId].shutdownServer()
             kvsServers.pop(serverId)
-        # return result
+        print("--- FE SHUTDOWN END ---")
+
 
 server = SimpleThreadedXMLRPCServer(("localhost", 8001))
 socket.setdefaulttimeout(3)
