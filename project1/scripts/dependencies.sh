@@ -17,4 +17,4 @@ sudo python3 setup.py install
 cd ../
 sudo rm -rf pyyaml
 
-sudo pip3 install awscli cloudpickle zmq protobuf==3.19.4 boto3 kubernetes six
+sudo pip3 install awscli cloudpickle zmq protobuf==3.19.4 boto3 kubernetes six readerwriterlock
