@@ -68,6 +68,10 @@ class FrontendRPCServer:
     def listServer(self):
         serverList = []
         for serverId, rpcHandle in kvsServers.items():
+            try:
+                rpcHandle.heart()
+            except:
+                continue
             serverList.append(serverId)
         return serverList
 
@@ -79,21 +83,21 @@ class FrontendRPCServer:
         kvsServers.pop(serverId)
         return result
     
-    def heartbeat(sec):
-        print("FE HEARTBEAT THREAD")
-        for id in kvsServers:
-            problem = None
-            try:
-                problem = id
-                print("PROBLEM: ", problem)
-                ret = kvsServers[id].heart()
-            except:
-                print("PROBLEM POPPED")
-                kvsServers.pop(problem)
-        # sleep(sec)
+    # def heartbeat(sec):
+    #     print("FE HEARTBEAT THREAD")
+    #     for id in kvsServers:
+    #         problem = None
+    #         try:
+    #             problem = id
+    #             print("PROBLEM: ", problem)
+    #             ret = kvsServers[id].heart()
+    #         except:
+    #             print("PROBLEM POPPED")
+    #             kvsServers.pop(problem)
+    #     # sleep(sec)
 
-hb_thread = Thread(target=FrontendRPCServer.heartbeat, args=(1,), daemon=True, name="hb")
-hb_thread.start()
+# hb_thread = Thread(target=FrontendRPCServer.heartbeat, args=(1,), daemon=True, name="hb")
+# hb_thread.start()
 server = SimpleThreadedXMLRPCServer(("localhost", 8001))
 socket.setdefaulttimeout(3)
 server.register_instance(FrontendRPCServer())
