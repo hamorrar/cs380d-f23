@@ -1,6 +1,7 @@
 import argparse
 import xmlrpc.client
 import xmlrpc.server
+import socket
 
 serverId = 0
 basePort = 9000
@@ -33,18 +34,12 @@ class KVSRPCServer:
             ret += str(key) + ":" + str(self.kvs[key]) + "\n"
         return ret
     
-    ## catchup: This function makes a request to a server 
-    ## in the membership to get the new server up to date.
-    def catchup(self):
-        ret = ""
-        for key in self.kvs:
-            ret += 1
-        return self.kvs
-        #return "SUCCESS: SERVER CAUGHT UP"
-    
     ## shutdownServer: Terminate the server itself normally.
     def shutdownServer(self):
-        return "[Server " + str(serverId) + "] Receive a request for a normal shutdown"
+        return "SUCCESS: [Server " + str(serverId) + "] Receive a request for a normal shutdown"
+    
+    def heart():
+        return "GM"
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = '''To be added.''')
@@ -57,6 +52,7 @@ if __name__ == '__main__':
     serverId = args.serverId[0]
 
     server = xmlrpc.server.SimpleXMLRPCServer(("localhost", basePort + serverId))
+    socket.setdefaulttimeout(3)
     server.register_instance(KVSRPCServer())
 
     server.serve_forever()

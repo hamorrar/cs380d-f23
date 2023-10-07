@@ -3,6 +3,8 @@ import xmlrpc.server
 from socketserver import ThreadingMixIn
 from xmlrpc.server import SimpleXMLRPCServer
 import random
+from threading import Thread
+import socket
 
 kvsServers = dict()
 baseAddr = "http://localhost:"
@@ -70,8 +72,25 @@ class FrontendRPCServer:
         result = kvsServers[serverId].shutdownServer()
         kvsServers.pop(serverId)
         return result
+    
+def heartbeat():
+    # for every server in membership
+    for ID in kvsServers:
+        # try to ping twice
+        tries = 0
+        for i in range(2):
+            try:
+                kvsServers[ID].heart()
+            except:
+                tries += 1
+                # after 2 tries, call it dead. remove from membership
+                if tries == 2:
+                    kvsServers.pop(ID)
 
+
+hb_thread = Thread(target=heartbeat, args=(3.5,), daemon=True, name="hb")
 server = SimpleThreadedXMLRPCServer(("localhost", 8001))
+socket.setdefaulttimeout(3)
 server.register_instance(FrontendRPCServer())
 
 server.serve_forever()
