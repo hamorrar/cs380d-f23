@@ -18,7 +18,6 @@ class KVSRPCServer:
     def put(self, key, value):
         self.kvs[key] = value
         return "SUCCESS: SERVER PUT"
-        # return "[Server " + str(serverId) + "] Receive a put request: " + "Key = " + str(key) + ", Val = " + str(value)
 
     ## get: Get the value associated with the given key.
     def get(self, key):
