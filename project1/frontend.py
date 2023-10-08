@@ -28,7 +28,6 @@ class FrontendRPCServer:
                 try:
                     kvsServers[id].put(key, value)
                 except:
-                    # kvsServers.pop(id)
                     deleteserver.append(id)
             for s in deleteserver:
                 kvsServers.pop(s)
@@ -45,7 +44,6 @@ class FrontendRPCServer:
                     ret = kvsServers[id].get(key)
                     break
                 except:
-                    # kvsServers.pop(id)
                     deleteserver.append(id)
             for s in deleteserver:
                 kvsServers.pop(s)
@@ -97,6 +95,8 @@ class FrontendRPCServer:
     ## are currently active/alive inside the cluster.
     def listServer(self):
         with lock:
+            if(len(kvsServers) == 0):
+                return "ERR_NOSERVERS"
             ret = ""
             serverList = []
             deleteservers = []
@@ -110,8 +110,7 @@ class FrontendRPCServer:
                 kvsServers.pop(s)
             for s in serverList:
                 ret += str(s) + ","
-
-        return ret[:-1]
+            return ret[:-1]
 
     ## shutdownServer: This function routes the shutdown request to
     ## a server matched with the specified serverId to let the corresponding

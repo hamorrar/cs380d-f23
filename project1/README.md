@@ -1,32 +1,15 @@
-## CS380d Project 1: Distributed Key-Value Store (KVS)
+# Project 1
 
-Through this project, we will learn how to build a distributed key-value store
-and how to test its performance/correctness under various scenarios (such as a 
-node crashing). Furthermore, we will gain some experience with the Kubernetes 
-container orchestration system. This repository provides some skeleton codes
-for the distributed KVS instances and guildelines to set up a basic KVS cluster 
-configuration with them using Kubernetes.
+## Design
+The system is fully replicated - every server holds the same and complete KVS. So it is tolerant to N-1 failures. The frontend does not store any KV pairs.
 
-## Contents
+### Frontend
+The frontend handles most of the logic for the system. Although ineffecient for now, the system shares a single lock so it can be thread safe. There were problems with modifying the membership list while iterating over it, so I made a new list of servers to delete if there was any exception/error while calling, get, put, addServer, and listServer. The crash/failure detection mechanism is if there is any exception raised while making a request to a server, that server is removed from the membership list.
 
-1. `create_cluster.py`: A python script that automatically sets up Kubernetes cluster configurations.
-2. `run_cluster.py`: An implementation for `event trigger`.
-3. `client.py`, `frontend.py`, `server.py`: Implementations containing skeleton codes for each cluster instance.
-4. `dockerfiles/`: dockerfiles to generate the container images of each cluster instance.
-5. `yaml/`: configuration files for the Kubernetes pods of each cluster instance.
-6. `kubespray/`: A copy of [Kubespray](https://github.com/kubernetes-sigs/kubespray) repository.
-7. `cluster.md`: A guildline to set up and run a KVS cluster.
+### Server
+Each server holds its own KVS. There is basic functionality, but most of the logic is handled by the frontend.
 
-## Setup & Run KVS cluster
+## Directions to run
+Same directions to run as the cluster.md file. I reverted all my changes and tested that the system still works. Docker images are pushed to Docker Hub (hamorrar/kvs).
 
-We present a [guideline](https://github.com/vijay03/cs380d-f23/blob/master/project1/cluster.md) to set up a basic KVS cluster configuration using
-Kubernetes. For this project, we use a single local machine and simulate 
-distributed environments using multiple container instances within the local
-machine. We provide scripts and source codes that are used to install
-necessary dependencies and packages for Kubernetes cluster. You don't need to
-download any third-party packages or source codes separately in addition to
-what we provide through this repository. Please refer to [cluster.md](https://github.com/vijay03/cs380d-f23/blob/master/project1/cluster.md) for more details.
-
-## Submission
-Please submit a zip file containing `server.py` and `frontend.py`, and a README explaining
-your design and implementation.
+delete_pods.sh, clean_docker_build.sh, python3 run_cluster.py (args).
