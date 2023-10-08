@@ -2,6 +2,7 @@ import argparse
 import xmlrpc.client
 import xmlrpc.server
 import socket
+import sys
 
 serverId = 0
 basePort = 9000
@@ -35,7 +36,10 @@ class KVSRPCServer:
     
     ## shutdownServer: Terminate the server itself normally.
     def shutdownServer(self):
-        return "SUCCESS: [Server " + str(serverId) + "] Receive a request for a normal shutdown"
+        try:
+            sys.exit()
+        finally:
+            return "SUCCESS: [Server " + str(serverId) + "] Receive a request for a normal shutdown"
     
     def heart(self):
         return "GM"

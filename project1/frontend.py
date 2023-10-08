@@ -2,7 +2,7 @@ import xmlrpc.client
 import xmlrpc.server
 from socketserver import ThreadingMixIn
 from xmlrpc.server import SimpleXMLRPCServer
-# from readerwriterlock import rwlock
+from readerwriterlock import rwlock
 import socket
 from threading import Lock
 from time import sleep
@@ -10,10 +10,6 @@ from time import sleep
 kvsServers = dict()
 baseAddr = "http://localhost:"
 baseServerPort = 9000
-
-# rw = rwlock.RWLockFair()
-# oneLock = rw.gen_wlock()
-
 
 lock = Lock()
 
@@ -69,8 +65,8 @@ class FrontendRPCServer:
     ## serverId to the cluster membership.
     def addServer(self, serverId):
         with lock:
+            deadservers = []
             if len(kvsServers) > 0:
-                deadservers = []
                 for id in kvsServers:
                     kvsServers[serverId] = xmlrpc.client.ServerProxy(baseAddr + str(baseServerPort + serverId))
                     try:
@@ -93,8 +89,8 @@ class FrontendRPCServer:
                     break
             else:
                 kvsServers[serverId] = xmlrpc.client.ServerProxy(baseAddr + str(baseServerPort + serverId))
-        for s in deadservers:
-            kvsServers.pop(s)
+            for s in deadservers:
+                kvsServers.pop(s)
         return "SUCCESS: FE ADD SERVER"
 
     ## listServer: This function prints out a list of servers that
