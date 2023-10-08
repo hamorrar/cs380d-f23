@@ -9,7 +9,7 @@ spec:
   containers:
   - name: frontend-container
     image: hamorrar/kvs:frontend
-    imagePullPolicy: Never
+    imagePullPolicy: Always
     securityContext:
       privileged: true
     env:

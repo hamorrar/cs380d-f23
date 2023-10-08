@@ -9,7 +9,7 @@ spec:
   containers:
   - name: client-container
     image: hamorrar/kvs:client
-    imagePullPolicy: Never
+    imagePullPolicy: Always
     securityContext:
       privileged: true
     env:
