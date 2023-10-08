@@ -10,4 +10,6 @@ The frontend handles most of the logic for the system. Although ineffecient for 
 Each server holds its own KVS. There is basic functionality, but most of the logic is handled by the frontend.
 
 ## Directions to run
-Normal. I'll change the dockerfiles and yaml files back to their original setup but with my username and see if that runs correctly.
+Same directions to run as the cluster.md file. I reverted all my changes and tested that the system still works. Docker images are pushed to Docker Hub (hamorrar/kvs).
+
+delete_pods.sh, clean_docker_build.sh, python3 run_cluster.py (args).
